@@ -90,7 +90,8 @@ export default function BadmintonQueue() {
             {queue.length > 0 ? (
               <ol className="list-decimal list-inside">
                 {queue.map((player, index) => (
-                  <li key={index} className="mb-1">{player.name} - {player.phoneNumber}</li>
+                  //<li key={index} className="mb-1">{player.name} - {player.phoneNumber}</li>
+                  <li key={index} className="mb-1">{player.name}</li>
                 ))}
               </ol>
             ) : (
