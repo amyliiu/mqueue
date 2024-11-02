@@ -5,16 +5,29 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
+// Mock function to simulate sending an SMS
+const sendSMS = (phoneNumber: string, message: string) => {
+  console.log(`Sending SMS to ${phoneNumber}: ${message}`)
+  // In a real application, you would integrate with an SMS service here
+}
+
+type Player = {
+  name: string
+  phoneNumber: string
+}
+
 export default function BadmintonQueue() {
-  const [queue, setQueue] = useState<string[]>([])
-  const [currentPlayers, setCurrentPlayers] = useState<string[]>([])
+  const [queue, setQueue] = useState<Player[]>([])
+  const [currentPlayers, setCurrentPlayers] = useState<Player[]>([])
   const [playerName, setPlayerName] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
 
   const addToQueue = (e: React.FormEvent) => {
     e.preventDefault()
-    if (playerName.trim()) {
-      setQueue([...queue, playerName.trim()])
+    if (playerName.trim() && phoneNumber.trim()) {
+      setQueue([...queue, { name: playerName.trim(), phoneNumber: phoneNumber.trim() }])
       setPlayerName('')
+      setPhoneNumber('')
     }
   }
 
@@ -23,6 +36,11 @@ export default function BadmintonQueue() {
       const newPlayers = queue.slice(0, 4)
       setCurrentPlayers(newPlayers)
       setQueue(queue.slice(4))
+
+      // Send notifications to players
+      newPlayers.forEach(player => {
+        sendSMS(player.phoneNumber, `Your badminton game is starting now!`)
+      })
     }
   }
 
@@ -39,15 +57,26 @@ export default function BadmintonQueue() {
           <CardTitle>Add Player to Queue</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={addToQueue} className="flex space-x-2">
-            <Input
-              type="text"
-              value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
-              placeholder="Enter player name"
-              className="flex-grow"
-            />
-            <Button type="submit">Add to Queue</Button>
+          <form onSubmit={addToQueue} className="space-y-4">
+            <div>
+              <Input
+                type="text"
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)}
+                placeholder="Enter player name"
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Input
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="Enter phone number"
+                className="w-full"
+              />
+            </div>
+            <Button type="submit" className="w-full">Add to Queue</Button>
           </form>
         </CardContent>
       </Card>
@@ -61,7 +90,7 @@ export default function BadmintonQueue() {
             {queue.length > 0 ? (
               <ol className="list-decimal list-inside">
                 {queue.map((player, index) => (
-                  <li key={index} className="mb-1">{player}</li>
+                  <li key={index} className="mb-1">{player.name} - {player.phoneNumber}</li>
                 ))}
               </ol>
             ) : (
@@ -78,9 +107,9 @@ export default function BadmintonQueue() {
             {currentPlayers.length === 4 ? (
               <>
                 <p className="mb-4">
-                  Team 1: {currentPlayers[0]} & {currentPlayers[1]}
+                  Team 1: {currentPlayers[0].name} & {currentPlayers[1].name}
                   <br />
-                  Team 2: {currentPlayers[2]} & {currentPlayers[3]}
+                  Team 2: {currentPlayers[2].name} & {currentPlayers[3].name}
                 </p>
                 <Button onClick={endGame} variant="destructive">End Game</Button>
               </>
