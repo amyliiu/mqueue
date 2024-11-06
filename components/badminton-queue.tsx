@@ -50,7 +50,7 @@ export default function BadmintonQueue() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Badminton Queue</h1>
+      <h1 className="text-3xl font-bold mb-6">MQueue</h1>
       
       <Card className="mb-6">
         <CardHeader>
