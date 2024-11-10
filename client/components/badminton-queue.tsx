@@ -1,78 +1,57 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+// Mock function to simulate sending an SMS
+const sendSMS = (phoneNumber: string, message: string) => {
+  console.log(`Sending SMS to ${phoneNumber}: ${message}`);
+  // In a real application, you would integrate with an SMS service here
+};
+
 type Player = {
-  name: string
-  phoneNumber: string
-}
+  name: string;
+  phoneNumber: string;
+};
 
 export default function BadmintonQueue() {
-  const [queue, setQueue] = useState<Player[]>([])
-  const [currentPlayers, setCurrentPlayers] = useState<Player[]>([])
-  const [playerName, setPlayerName] = useState('')
-  const [phoneNumber, setPhoneNumber] = useState('')
-  const [error, setError] = useState<string | null>(null) // For error handling
+  const [queue, setQueue] = useState<Player[]>([]);
+  const [currentPlayers, setCurrentPlayers] = useState<Player[]>([]);
+  const [playerName, setPlayerName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
 
-  // Function to add player to queue
   const addToQueue = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (playerName.trim() && phoneNumber.trim()) {
-      setQueue([...queue, { name: playerName.trim(), phoneNumber: phoneNumber.trim() }])
-      setPlayerName('')
-      setPhoneNumber('')
+      setQueue([...queue, { name: playerName.trim(), phoneNumber: phoneNumber.trim() }]);
+      setPlayerName('');
+      setPhoneNumber('');
     }
-  }
+  };
 
-  // Function to start a game with the first 4 players in the queue
-  const startGame = async () => {
+  const startGame = () => {
     if (queue.length >= 4) {
-      const newPlayers = queue.slice(0, 4)
-      setCurrentPlayers(newPlayers)
-      setQueue(queue.slice(4))
+      const newPlayers = queue.slice(0, 4);
+      setCurrentPlayers(newPlayers);
+      setQueue(queue.slice(4));
 
-      // Send SMS notifications to players using the FastAPI backend
-      try {
-        for (const player of newPlayers) {
-          const response = await fetch('http://localhost:8000/api/v1/send-sms', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              phoneNumber: player.phoneNumber,
-              message: `Hi ${player.name}, your badminton game is starting now!`
-            })
-          })
-
-          const data = await response.json()
-          if (!response.ok) {
-            throw new Error(data.message || `Failed to send SMS to ${player.phoneNumber}`)
-          }
-        }
-        setError(null) // Clear any previous error messages on success
-      } catch (err: any) {
-        console.error(err)
-        setError(`Failed to send SMS notifications: ${err.message}`)
-      }
+      // Send notifications to players
+      newPlayers.forEach(player => {
+        sendSMS(player.phoneNumber, `Your badminton game is starting now!`);
+      });
     }
-  }
+  };
 
-  // Function to end the current game
   const endGame = () => {
-    setCurrentPlayers([])
-  }
+    setCurrentPlayers([]);
+  };
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">MQueue</h1>
-      
-      {/* Display any error messages */}
-      {error && <p className="text-red-500 mb-4">{error}</p>}
-      
+
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Add Player to Queue</CardTitle>
@@ -103,7 +82,6 @@ export default function BadmintonQueue() {
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Queue of players waiting to play */}
         <Card>
           <CardHeader>
             <CardTitle>Current Queue</CardTitle>
@@ -121,7 +99,6 @@ export default function BadmintonQueue() {
           </CardContent>
         </Card>
 
-        {/* Current game in progress */}
         <Card>
           <CardHeader>
             <CardTitle>Current Game</CardTitle>
@@ -146,5 +123,5 @@ export default function BadmintonQueue() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
