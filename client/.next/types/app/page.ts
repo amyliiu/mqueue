@@ -1,4 +1,4 @@
-// File: C:\Users\itsjo\Documents\Projects\mqueue\client\app\page.tsx
+// File: /Users/amyliu/Projects/mqueue/client/app/page.tsx
 import * as entry from '../../../app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

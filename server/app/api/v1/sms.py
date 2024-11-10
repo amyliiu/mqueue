@@ -1,15 +1,21 @@
 # server/app/api/v1/sms.py
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, constr
+from pydantic import BaseModel, constr, StringConstraints
 from app.services.sms_service import send_sms
+from typing_extensions import Annotated
 
+PhoneNumber = Annotated[str, StringConstraints(pattern=r'^\+?\d{10,15}$')]
+
+class SMSRequest(BaseModel):
+    phoneNumber: PhoneNumber
+    message: str
 # Create a router for version 1 of the SMS API
 router = APIRouter()
 
 # Define the data structure for incoming SMS requests
-class SMSRequest(BaseModel):
-    phoneNumber: constr(regex=r'^\+?\d{10,15}$')  # A basic phone number pattern, allowing international formats
-    message: constr(min_length=1, max_length=160)  # Limit message length to 160 characters for SMS
+# class SMSRequest(BaseModel):
+#     phoneNumber: constr(regex=r'^\+?\d{10,15}$')  # A basic phone number pattern, allowing international formats
+#     message: constr(min_length=1, max_length=160)  # Limit message length to 160 characters for SMS
 
 @router.post("/send-sms")
 async def send_sms_endpoint(sms_request: SMSRequest):

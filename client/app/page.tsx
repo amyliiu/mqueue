@@ -1,6 +1,6 @@
-import PageComponent from "@/components/page"
+import BadmintonQueue from "@/components/badminton-queue"
 
 // app/page.tsx
 export default function Page() {
-  return <h1>Welcome to MQueue</h1>
+  return <BadmintonQueue />
 }

@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 // Mock function to simulate sending an SMS
 const sendSMS = (phoneNumber: string, message: string) => {
   console.log(`Sending SMS to ${phoneNumber}: ${message}`);
-  // In a real application, you would integrate with an SMS service here
 };
 
 type Player = {
