@@ -1,7 +1,7 @@
 # server/app/main.py
 from fastapi import FastAPI
-# from slowapi import _rate_limit_exceeded_handler
-# from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import sms  # Import the sms router
 from app.api.v1 import queue  # Import the queue router
@@ -21,8 +21,8 @@ app.add_middleware(
 )
 
 # Register the `v1` API routes
-app.include_router(sms.router, prefix="/api/v1")
-app.include_router(queue.router, prefix="/api/v1")
+app.include_router(sms.router)
+app.include_router(queue.router)
 
 # Optional: Add a test endpoint
 @app.get("/test")

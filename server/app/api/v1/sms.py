@@ -31,7 +31,7 @@ class SMSRequest(BaseModel):
     message: str
 
 # # Create a router for version 1 of the SMS API
-# router = APIRouter()
+router = APIRouter()
 
 @router.post("/send-sms")
 

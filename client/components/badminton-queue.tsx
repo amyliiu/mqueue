@@ -5,16 +5,16 @@ const API_URL = 'http://localhost:8000';
 
 export default function BadmintonQueue() {
   const [queue, setQueue] = useState<Array<{ name: string; phoneNumber: string }>>([]);
-  const [isLoading, setIsLoading] = useState(true);  // Add loading state
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
-    // Fetch queue data when component mounts
+    setIsClient(true)
     getQueue();
   }, []);
 
   async function getQueue() {
     try {
-      const response = await fetch(`${API_URL}/api/v1/queue/get_queue`);
+      const response = await fetch(`${API_URL}/api/v1/queue`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -23,44 +23,48 @@ export default function BadmintonQueue() {
     } catch (error) {
       console.error('Error fetching queue:', error);
       setQueue([]);
-    } finally {
-      setIsLoading(false);
     }
   }
 
-  async function addToQueue(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const name = formData.get('name') as string;
-    const phoneNumber = formData.get('phoneNumber') as string;
+  // ... other imports and initial code remain the same ...
 
-    try {
-      const response = await fetch(`${API_URL}/api/queue/add_to_queue`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, phoneNumber }),
-      });
+async function addToQueue(event: React.FormEvent<HTMLFormElement>) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const formData = new FormData(form);
+  const name = formData.get('name') as string;
+  const phoneNumber = formData.get('phoneNumber') as string;
 
-      if (!response.ok) {
-        throw new Error('Failed to add player to queue');
-      }
+  try {
+    const response = await fetch(`${API_URL}/api/v1/queue`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name, phoneNumber }),
+    });
 
-      // Refresh the queue after successful addition
-      getQueue();
-      
-      // Reset the form
-      event.currentTarget.reset();
-    } catch (error) {
-      console.error('Error adding player to queue:', error);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(
+        errorData?.message || 
+        `Failed to add player to queue. Status: ${response.status}`
+      );
+    }
+
+    form.reset();
+    await getQueue();
+    //event.currentTarget.reset();
+    // ^^ does this line need to be there? it works when its commented out
+
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error('Error adding player to queue:', error.message);
+    } else {
+      console.error('Error adding player to queue:', String(error));
     }
   }
-
-  // Show loading state
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+}
 
   return (
     <div className="container mx-auto p-4">
