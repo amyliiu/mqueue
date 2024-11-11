@@ -14,6 +14,7 @@ class Player(BaseModel):
 async def add_to_queue(player: Player):
     queue.append({"name": player.name, "phoneNumber": player.phoneNumber})
     print(f"added: {player.name} - {player.phoneNumber}")
+    await remove_player()
     return {"message": "Player added successfully"}
 
 @router.get("/queue")
@@ -25,6 +26,9 @@ async def get_curr_players():
     return curr_players
 
 async def remove_player():
+    print(f"curr_players: {curr_players}")
+    print(f"queue: {queue}")
+
     if len(curr_players) == 0 and len(queue) >= 4:
         for i in range(4):
             player = queue[0]
