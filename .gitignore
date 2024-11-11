@@ -2,3 +2,4 @@ node_modules
 .vercel
 repomix-output.txt
 venv/
+__pycache__

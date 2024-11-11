@@ -14,7 +14,7 @@ export default function BadmintonQueue() {
 
   async function getQueue() {
     try {
-      const response = await fetch(`${API_URL}/api/queue/get_queue`);
+      const response = await fetch(`${API_URL}/api/v1/queue/get_queue`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

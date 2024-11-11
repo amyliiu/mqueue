@@ -1,7 +1,7 @@
 # server/app/main.py
 from fastapi import FastAPI
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
+# from slowapi import _rate_limit_exceeded_handler
+# from slowapi.errors import RateLimitExceeded
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import sms  # Import the sms router
 from app.api.v1 import queue  # Import the queue router
