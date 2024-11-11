@@ -1,125 +1,111 @@
-'use client';
+"use client";
+import { useState, useEffect } from 'react';
 
-import { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-// Mock function to simulate sending an SMS
-const sendSMS = (phoneNumber: string, message: string) => {
-  console.log(`Sending SMS to ${phoneNumber}: ${message}`);
-};
-
-type Player = {
-  name: string;
-  phoneNumber: string;
-};
+const API_URL = 'http://localhost:8000';
 
 export default function BadmintonQueue() {
-  const [queue, setQueue] = useState<Player[]>([]);
-  const [currentPlayers, setCurrentPlayers] = useState<Player[]>([]);
-  const [playerName, setPlayerName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [queue, setQueue] = useState<Array<{ name: string; phoneNumber: string }>>([]);
+  const [isLoading, setIsLoading] = useState(true);  // Add loading state
 
-  const addToQueue = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (playerName.trim() && phoneNumber.trim()) {
-      setQueue([...queue, { name: playerName.trim(), phoneNumber: phoneNumber.trim() }]);
-      setPlayerName('');
-      setPhoneNumber('');
+  useEffect(() => {
+    // Fetch queue data when component mounts
+    getQueue();
+  }, []);
+
+  async function getQueue() {
+    try {
+      const response = await fetch(`${API_URL}/api/queue/get_queue`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setQueue(data);
+    } catch (error) {
+      console.error('Error fetching queue:', error);
+      setQueue([]);
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }
 
-  const startGame = () => {
-    if (queue.length >= 4) {
-      const newPlayers = queue.slice(0, 4);
-      setCurrentPlayers(newPlayers);
-      setQueue(queue.slice(4));
+  async function addToQueue(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const name = formData.get('name') as string;
+    const phoneNumber = formData.get('phoneNumber') as string;
 
-      // Send notifications to players
-      newPlayers.forEach(player => {
-        sendSMS(player.phoneNumber, `Your badminton game is starting now!`);
+    try {
+      const response = await fetch(`${API_URL}/api/queue/add_to_queue`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, phoneNumber }),
       });
-    }
-  };
 
-  const endGame = () => {
-    setCurrentPlayers([]);
-  };
+      if (!response.ok) {
+        throw new Error('Failed to add player to queue');
+      }
+
+      // Refresh the queue after successful addition
+      getQueue();
+      
+      // Reset the form
+      event.currentTarget.reset();
+    } catch (error) {
+      console.error('Error adding player to queue:', error);
+    }
+  }
+
+  // Show loading state
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">MQueue</h1>
+      <h1 className="text-2xl font-bold mb-4">Badminton Queue</h1>
+      
+      {/* Add to Queue Form */}
+      <form onSubmit={addToQueue} className="mb-8">
+        <div className="flex flex-col gap-4 max-w-md">
+          <input
+            type="text"
+            name="name"
+            placeholder="Name"
+            required
+            className="p-2 border rounded"
+          />
+          <input
+            type="tel"
+            name="phoneNumber"
+            placeholder="Phone Number"
+            required
+            className="p-2 border rounded"
+          />
+          <button
+            type="submit"
+            className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+          >
+            Add to Queue
+          </button>
+        </div>
+      </form>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Add Player to Queue</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={addToQueue} className="space-y-4">
-            <div>
-              <Input
-                type="text"
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-                placeholder="Enter player name"
-                className="w-full"
-              />
-            </div>
-            <div>
-              <Input
-                type="tel"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="Enter phone number"
-                className="w-full"
-              />
-            </div>
-            <Button type="submit" className="w-full">Add to Queue</Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Current Queue</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {queue.length > 0 ? (
-              <ol className="list-decimal list-inside">
-                {queue.map((player, index) => (
-                  <li key={index} className="mb-1">{player.name}</li>
-                ))}
-              </ol>
-            ) : (
-              <p>No players in queue</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Current Game</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {currentPlayers.length === 4 ? (
-              <>
-                <p className="mb-4">
-                  Team 1: {currentPlayers[0].name} & {currentPlayers[1].name}
-                  <br />
-                  Team 2: {currentPlayers[2].name} & {currentPlayers[3].name}
-                </p>
-                <Button onClick={endGame} variant="destructive">End Game</Button>
-              </>
-            ) : (
-              <>
-                <p className="mb-4">No game in progress</p>
-                <Button onClick={startGame} disabled={queue.length < 4}>Start Game</Button>
-              </>
-            )}
-          </CardContent>
-        </Card>
+      {/* Queue Display */}
+      <div>
+        <h2 className="text-xl font-semibold mb-2">Current Queue</h2>
+        {queue.length === 0 ? (
+          <p>No one in queue</p>
+        ) : (
+          <ul className="space-y-2">
+            {queue.map((player, index) => (
+              <li key={index} className="p-2 bg-gray-100 rounded">
+                {player.name} - {player.phoneNumber}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
