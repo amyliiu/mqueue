@@ -8,7 +8,7 @@ os.environ.pop('TWILIO_AUTH_TOKEN', None)
 os.environ.pop('TWILIO_PHONE_NUMBER', None)
 
 # Get absolute path to .env file
-env_path = r"C:\Users\itsjo\Documents\Projects\mqueue\.env"
+env_path = Path.home() / "Documents" / "Projects" / "mqueue" / ".env"
 print(f"Looking for .env file at: {env_path}")
 
 # Load the values directly
