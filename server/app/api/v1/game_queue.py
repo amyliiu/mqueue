@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Body
+from fastapi import APIRouter, Body, Request
 from pydantic import BaseModel
 from twilio.rest import Client
 from dotenv import load_dotenv
@@ -57,6 +57,20 @@ async def get_queue():
 @router.get("/players") 
 async def get_curr_players():
     return curr_players
+
+@router.post("/stop")
+async def handle_sms_webhook(request: Request):
+    form_data = await request.form()
+    message_body = form_data.get("Body", "").strip().upper()
+    from_number = form_data.get("From", "")
+
+    if message_body == "STOP":
+        curr_players.clear()
+        await remove_player()
+        
+        return {"message": "Game ended, next players notified"}
+    
+    return {"message": "Message received"}
 
 async def remove_player():
     print(f"curr_players: {curr_players}")
