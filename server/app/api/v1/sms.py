@@ -40,7 +40,6 @@ async def send_sms_endpoint(sms_request: SMSRequest):
     Endpoint to send an SMS message using Twilio.
     Expects a JSON payload with 'phoneNumber' and 'message'.
     """
-
     print("send message")
 
     # try:

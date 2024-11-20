@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from twilio.rest import Client
 from dotenv import load_dotenv
 import os
+import asyncio
 
 load_dotenv()
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
@@ -22,13 +23,20 @@ class Player(BaseModel):
 
 async def send_sms(to_number: str, message: str):
     try:
-        client.messages.create(
-            body=message,
-            from_=TWILIO_PHONE_NUMBER,
-            to=to_number
-        )
+        # Run the synchronous Twilio call in a separate thread
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor() as executor:
+            await asyncio.get_event_loop().run_in_executor(
+                executor,
+                lambda: client.messages.create(
+                    body=message,
+                    from_=TWILIO_PHONE_NUMBER,
+                    to=to_number
+                )
+            )
+        print("sent message")
     except Exception as e:
-        print(f"Error sending SMS: {e}")
+        print(f"Error sending SMS to {to_number}: {str(e)}")
 
 @router.post("/queue") 
 async def add_to_queue(player: Player):

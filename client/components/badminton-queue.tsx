@@ -87,6 +87,7 @@ async function addToQueue(event: React.FormEvent<HTMLFormElement>) {
             required
             className="p-2 border rounded"
           />
+          <h5 className='space-y-2'>By providing your information you opt in to recieving texts from our service. Messaging rates may apply.</h5>
           <button
             type="submit"
             className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600"

@@ -4,7 +4,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import sms  # Import the sms router
-from server.app.api.v1 import game_queue  # Import the queue router
+from app.api.v1 import game_queue  # Import the queue router
 # from app.api.v1.sms import router, limiter
 
 app = FastAPI()
@@ -20,11 +20,5 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register the `v1` API routes
 app.include_router(sms.router)
 app.include_router(game_queue.router)
-
-# Optional: Add a test endpoint
-@app.get("/test")
-async def test_endpoint():
-    return {"message": "API is working"}
