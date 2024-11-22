@@ -4,6 +4,7 @@ from twilio.rest import Client
 from dotenv import load_dotenv
 import os
 import asyncio
+from pathlib import Path
 
 load_dotenv()
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
@@ -21,6 +22,37 @@ curr_players = []
 class Player(BaseModel):
     name: str
     phoneNumber: str
+
+async def send_sms_v2(number:str, message:str):
+    # need to fix this
+    env_path = '/Users/amyliu/Projects/mqueue/.env'
+    print(f"Looking for .env file at: {env_path}")
+
+    with open(env_path, 'r') as f:
+        for line in f:
+            if '=' in line:
+                key, value = line.strip().split('=', 1)
+                os.environ[key] = value
+
+    account_sid = os.getenv('TWILIO_ACCOUNT_SID')
+    auth_token = os.getenv('TWILIO_AUTH_TOKEN')
+    twilio_number = os.getenv('TWILIO_PHONE_NUMBER')
+
+    print("\nValues loaded:")
+    print(f"TWILIO_ACCOUNT_SID: {account_sid}")
+    print(f"TWILIO_AUTH_TOKEN: {auth_token}")
+    print(f"TWILIO_PHONE_NUMBER: {twilio_number}")
+
+    try:
+        client = Client(account_sid, auth_token)
+        message = client.messages.create(
+            body='rahhhhhhhhh.',
+            from_=twilio_number,
+            to='+18777804236'
+        )
+        print(f"\nSuccess! Message sent with SID: {message.sid}")
+    except Exception as e:
+        print(f"\nError: {e}")
 
 async def send_sms(to_number: str, message: str):
     try:
@@ -44,7 +76,7 @@ async def add_to_queue(player: Player):
     queue.append({"name": player.name, "phoneNumber": player.phoneNumber})
     position = len(queue)
     # Send position in queue message
-    await send_sms(
+    await send_sms_v2(
         player.phoneNumber,
         f"Hi {player.name}! You are number {position} in the queue."
     )
@@ -80,7 +112,7 @@ async def remove_player():
     if len(curr_players) == 0 and len(queue) >= 4:
         for i in range(4):
             player = queue[0]
-            await send_sms(
+            await send_sms_v2(
                 player["phoneNumber"],
                 f"Hi {player['name']}! Your court is ready! Please proceed to the courts."
             )

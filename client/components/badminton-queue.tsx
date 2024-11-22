@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect } from 'react';
 
-const API_URL = process.env.BACKEND_API_URL || 'http://localhost:8000';
+// const API_URL = process.env.BACKEND_API_URL || 'http://localhost:8000';
+const API_URL = 'http://localhost:8000';
 
 export default function BadmintonQueue() {
   const [queue, setQueue] = useState<Array<{ name: string; phoneNumber: string }>>([]);
