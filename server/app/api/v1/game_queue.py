@@ -46,30 +46,13 @@ async def send_sms_v2(number:str, message:str):
     try:
         client = Client(account_sid, auth_token)
         message = client.messages.create(
-            body='rahhhhhhhhh.',
+            body='hi.',
             from_=twilio_number,
-            to='+18777804236'
+            to='+16504059992'
         )
         print(f"\nSuccess! Message sent with SID: {message.sid}")
     except Exception as e:
         print(f"\nError: {e}")
-
-async def send_sms(to_number: str, message: str):
-    try:
-        # Run the synchronous Twilio call in a separate thread
-        from concurrent.futures import ThreadPoolExecutor
-        with ThreadPoolExecutor() as executor:
-            await asyncio.get_event_loop().run_in_executor(
-                executor,
-                lambda: client.messages.create(
-                    body=message,
-                    from_=TWILIO_PHONE_NUMBER,
-                    to=to_number
-                )
-            )
-        print("sent message")
-    except Exception as e:
-        print(f"Error sending SMS to {to_number}: {str(e)}")
 
 @router.post("/queue") 
 async def add_to_queue(player: Player):
