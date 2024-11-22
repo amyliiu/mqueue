@@ -3,13 +3,13 @@ import { useState, useEffect } from 'react';
 
 const API_URL = process.env.BACKEND_API_URL || 'http://localhost:8000';
 //const API_URL = 'http://localhost:8000';
+console.log('API_URL:', API_URL);
 
 export default function BadmintonQueue() {
   const [queue, setQueue] = useState<Array<{ name: string; phoneNumber: string }>>([]);
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
-    setIsClient(true)
     getQueue();
   }, []);
 
@@ -27,14 +27,16 @@ export default function BadmintonQueue() {
     }
   }
 
-  // ... other imports and initial code remain the same ...
-
 async function addToQueue(event: React.FormEvent<HTMLFormElement>) {
   event.preventDefault();
   const form = event.currentTarget;
   const formData = new FormData(form);
   const name = formData.get('name') as string;
-  const phoneNumber = formData.get('phoneNumber') as string;
+  let phoneNumber = formData.get('phoneNumber') as string;
+
+  if (!phoneNumber.startsWith('+')) {
+    phoneNumber = `+1${phoneNumber.replace(/\D/g, '')}`;
+  }
 
   try {
     const response = await fetch(`${API_URL}/api/v1/queue`, {
@@ -45,26 +47,38 @@ async function addToQueue(event: React.FormEvent<HTMLFormElement>) {
       body: JSON.stringify({ name, phoneNumber }),
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(
-        errorData?.message || 
-        `Failed to add player to queue. Status: ${response.status}`
-      );
+      throw new Error(data.error || 'Failed to add to queue');
     }
 
     form.reset();
     await getQueue();
-    //event.currentTarget.reset();
-    // ^^ does this line need to be there? it works when its commented out
+    } catch (error) {
+      console.error('Error:', error);
+    } 
 
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error('Error adding player to queue:', error.message);
-    } else {
-      console.error('Error adding player to queue:', String(error));
-    }
-  }
+  //   if (!response.ok) {
+  //     const errorData = await response.json().catch(() => null);
+  //     throw new Error(
+  //       errorData?.message || 
+  //       `Failed to add player to queue. Status: ${response.status}`
+  //     );
+  //   }
+
+  //   form.reset();
+  //   await getQueue();
+  //   //event.currentTarget.reset();
+  //   // ^^ does this line need to be there? it works when its commented out
+
+  // } catch (error: unknown) {
+  //   if (error instanceof Error) {
+  //     console.error('Error adding player to queue:', error.message);
+  //   } else {
+  //     console.error('Error adding player to queue:', String(error));
+  //   }
+  // }
 }
 
   return (
