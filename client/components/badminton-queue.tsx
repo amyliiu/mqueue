@@ -37,6 +37,7 @@ async function addToQueue(event: React.FormEvent<HTMLFormElement>) {
   const phoneNumber = formData.get('phoneNumber') as string;
 
   try {
+    // Add to queue
     const response = await fetch(`${API_URL}/api/v1/queue`, {
       method: 'POST',
       headers: {
@@ -53,10 +54,27 @@ async function addToQueue(event: React.FormEvent<HTMLFormElement>) {
       );
     }
 
-    form.reset();
+    // Get updated queue to determine position
     await getQueue();
-    //event.currentTarget.reset();
-    // ^^ does this line need to be there? it works when its commented out
+    const queuePosition = queue.length; // Position is the last index + 1
+
+    // Send SMS notification
+    const smsResponse = await fetch(`${API_URL}/api/v1/notify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        to: '+16504059992',
+        message: `New player added to queue:\nName: ${name}\nPhone: ${phoneNumber}\nPosition: ${queuePosition}`
+      }),
+    });
+
+    if (!smsResponse.ok) {
+      console.error('Failed to send SMS notification');
+    }
+
+    form.reset();
 
   } catch (error: unknown) {
     if (error instanceof Error) {
