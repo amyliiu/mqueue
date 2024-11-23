@@ -1,66 +1,39 @@
 "use client";
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, FormEvent } from 'react';
+import styles from './badminton-queue.module.css';
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8000';
 
+function getOrdinalSuffix(position: number): string {
+  const j = position % 10;
+  const k = position % 100;
+  if (j === 1 && k !== 11) {
+    return 'st';
+  }
+  if (j === 2 && k !== 12) {
+    return 'nd';
+  }
+  if (j === 3 && k !== 13) {
+    return 'rd';
+  }
+  return 'th';
+}
+
 export default function BadmintonQueue() {
-  const [queue, setQueue] = useState<Array<{ name: string; phoneNumber: string }>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showQueueStatus, setShowQueueStatus] = useState(false);
-  const [queuePosition, setQueuePosition] = useState(0);
+  const [queuePosition, setQueuePosition] = useState<number | null>(null);
 
-  useEffect(() => {
-    getQueue();
-  }, []);
-
-  const getNumberSuffix = (number: number) => {
-    const j = number % 10;
-    const k = number % 100;
-    if (j === 1 && k !== 11) return "st";
-    if (j === 2 && k !== 12) return "nd";
-    if (j === 3 && k !== 13) return "rd";
-    return "th";
-  };
-
-  async function getQueue() {
-    try {
-      const response = await fetch(`${API_URL}/api/v1/queue`);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
-      setQueue(data);
-    } catch (error) {
-      console.error('Error fetching queue:', error);
-      setQueue([]);
-    }
-  }
   async function addToQueue(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsLoading(true);
-  
+
     const form = event.currentTarget;
     const formData = new FormData(form);
     const name = formData.get('name') as string;
-    let phoneNumber = formData.get('phoneNumber') as string;
-  
+    const phoneNumber = formData.get('phoneNumber') as string;
+
     try {
-      if (name.length < 2) {
-        throw new Error('Name must be at least 2 characters long');
-      }
-  
-      phoneNumber = phoneNumber.replace(/\D/g, '');
-      if (phoneNumber.length === 10) {
-        phoneNumber = `+1${phoneNumber}`;
-      } else if (phoneNumber.length === 11 && phoneNumber.startsWith('1')) {
-        phoneNumber = `+${phoneNumber}`;
-      } else {
-        throw new Error('Please enter a valid 10-digit phone number');
-      }
-
-      console.log('Form values:', {
-        name: formData.get('name'),
-        phoneNumber: formData.get('phoneNumber')
-    });
-
       const response = await fetch(`${API_URL}/api/v1/queue`, {
         method: 'POST',
         headers: {
@@ -68,15 +41,13 @@ export default function BadmintonQueue() {
         },
         body: JSON.stringify({ name, phoneNumber }),
       });
-  
+
       const data = await response.json();
       
       if (!response.ok) {
-        // Handle the error response from the server properly
-        throw new Error(data.detail || JSON.stringify(data) || 'Failed to add to queue');
+        throw new Error(data.detail || 'Failed to add to queue');
       }
-  
-      await getQueue();
+
       setQueuePosition(data.position);
       setShowQueueStatus(true);
     } catch (error) {
@@ -85,46 +56,60 @@ export default function BadmintonQueue() {
       setIsLoading(false);
     }
   }
-  
-  // Update your form input
+
   return (
-    <div className="container">
-      <h1 className="title">MQueue</h1>
-      <form onSubmit={addToQueue} className="queue-form">
-        <input
-          type="text"
-          name="name"
-          className="input-field"
-          placeholder="Name *"
-          pattern="[A-Za-z\s-]+"
-          title="Name can only contain letters, spaces, and hyphens"
-          required
-          minLength={2}
-        />
-        <input
-          type="tel"
-          name="phoneNumber"
-          className="input-field"
-          placeholder="Phone Number * (e.g., 1234567890)"
-          pattern="^\+?1?\d{10}$"
-          title="Please enter a valid 10-digit phone number"
-          required
-        />
-        <div className="checkbox-container">
-          <input type="checkbox" id="consent" required />
-          <label htmlFor="consent">
-            By providing your information you opt in to receiving texts from our service. 
-            Messaging rates may apply.
-          </label>
+    <div className={styles.container}>
+      {showQueueStatus ? (
+        <div className={styles.queueStatus}>
+          <h2>You are</h2>
+          <div className={styles.positionDisplay}>
+            {queuePosition}{getOrdinalSuffix(queuePosition!)}
+          </div>
+          <h2>in the Queue!</h2>
+          
+          <div className={styles.menuList}>
+            <div className={styles.menuItem}>Menu item</div>
+            <div className={styles.menuItem}>Menu item</div>
+            <div className={styles.menuItem}>Menu item</div>
+            <div className={styles.menuItem}>Menu item</div>
+            <div className={`${styles.menuItem} ${styles.activeMenuItem}`}>Menu item</div>
+          </div>
         </div>
-        <button
-          type="submit"
-          className="submit-button"
-          disabled={isLoading}
-        >
-          {isLoading ? 'Adding...' : 'Add to Queue'}
-        </button>
-      </form>
+      ) : (
+        <>
+          <h1 className={styles.title}>MQueue</h1>
+          <form onSubmit={addToQueue} className={styles.queueForm}>
+            <input
+              type="text"
+              name="name"
+              className={styles.inputField}
+              placeholder="Name *"
+              required
+            />
+            <input
+              type="tel"
+              name="phoneNumber"
+              className={styles.inputField}
+              placeholder="Phone Number *"
+              required
+            />
+            <div className={styles.checkboxContainer}>
+              <input type="checkbox" id="consent" required />
+              <label htmlFor="consent">
+                By providing your information you opt in to receiving texts from our service. 
+                Messaging rates may apply.
+              </label>
+            </div>
+            <button
+              type="submit"
+              className={styles.submitButton}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Adding...' : 'Add to Queue'}
+            </button>
+          </form>
+        </>
+      )}
     </div>
   );
 }

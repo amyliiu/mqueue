@@ -1,0 +1,79 @@
+.container {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 20px;
+  text-align: center;
+}
+
+.title {
+  color: var(--primary-color);
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+}
+
+.queueForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.inputField {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  background-color: var(--highlight-color);
+}
+
+.checkboxContainer {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.submitButton {
+  padding: 12px 24px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.submitButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Queue Status Page Styles */
+.queueStatus {
+  text-align: center;
+}
+
+.positionDisplay {
+  font-size: 4rem;
+  font-weight: bold;
+  color: var(--primary-color);
+  margin: 1rem 0;
+}
+
+.menuList {
+  margin-top: 2rem;
+}
+
+.menuItem {
+  padding: 1rem;
+  background-color: var(--highlight-color);
+  margin: 0.5rem 0;
+  border-radius: 8px;
+}
+
+.activeMenuItem {
+  background-color: var(--primary-color);
+  color: white;
+} 

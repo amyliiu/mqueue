@@ -39,34 +39,6 @@ class Player(BaseModel):
     name: str
     phoneNumber: str
 
-    @validator('phoneNumber')
-    def validate_phone(cls, value):
-        """Validate phone number format"""
-        # Remove any non-digit characters
-        phone_num = re.sub(r'\D', '', value)
-        
-        # Add country code if needed
-        if not value.startswith('+'):
-            phone_num = '1' + phone_num if not phone_num.startswith('1') else phone_num
-            phone_num = '+' + phone_num
-
-        # Validate length
-        if len(re.sub(r'\D', '', phone_num)) != 11:
-            raise ValueError('Phone number must be 10 digits (excluding country code)')
-
-        # Validate format
-        if not re.match(r'^\+1[2-9]\d{2}[2-9]\d{2}\d{4}$', phone_num):
-            raise ValueError('Invalid phone number format')
-
-        return phone_num
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "name": "John Doe",
-                "phoneNumber": "+11234567890"
-            }
-        }
 
 
 def get_twilio_client():
@@ -83,7 +55,6 @@ def get_twilio_client():
 async def send_sms(to_number: str, message: str):
     """Send SMS using Twilio"""
     try:
-        # Get Twilio client
         twilio_client = get_twilio_client()
         if not twilio_client:
             print("Warning: Could not initialize Twilio client")
@@ -117,18 +88,6 @@ async def get_queue():
 async def add_to_queue(player: Player):
     """Add a player to the queue"""
     try:
-        if any(p["phoneNumber"] == player.phoneNumber for p in queue):
-            raise HTTPException(
-                status_code=400,
-                detail="This phone number is already in the queue"
-            )
-
-        if any(p["phoneNumber"] == player.phoneNumber for p in curr_players):
-            raise HTTPException(
-                status_code=400,
-                detail="This phone number is already playing"
-            )
-        
         print(f"Adding player: {player.name} ({player.phoneNumber})")
         queue.append({"name": player.name, "phoneNumber": player.phoneNumber})
         position = len(queue)
@@ -147,7 +106,6 @@ async def add_to_queue(player: Player):
 
 @router.get("/players")
 async def get_curr_players():
-    """Get current players"""
     return curr_players
 
 @router.post("/stop")
@@ -169,7 +127,6 @@ async def handle_sms_webhook(request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 async def remove_player():
-    """Remove players and notify next group"""
     print(f"curr_players: {curr_players}")
     print(f"queue: {queue}")
 
@@ -187,16 +144,3 @@ async def remove_player():
             print(f"Error moving players: {str(e)}")
             raise HTTPException(status_code=500, detail=str(e))
     return {"message": "No players to move"}
-
-# Optional: Add test endpoint
-@router.get("/test-sms")
-async def test_sms():
-    """Test endpoint for SMS sending"""
-    try:
-        await send_sms(
-            "+1234567890",  # Replace with your test number
-            "Test message from FastAPI"
-        )
-        return {"message": "Test SMS sent"}
-    except Exception as e:
-        return {"error": str(e)}
