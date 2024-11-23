@@ -11,9 +11,9 @@ load_dotenv()
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
 TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER')
-PORT = os.getenv('PORT')
 
-client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
+    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 router = APIRouter(prefix="/api/v1")  
 
@@ -26,6 +26,9 @@ class Player(BaseModel):
 
 async def send_sms(to_number: str, message: str):
     """Send SMS using Twilio in an async-safe way"""
+    if not client:
+        print("Warning: Twilio client not initialized - SMS will not be sent")
+        return
     try:
         # Format phone number if it doesn't start with +
         if not to_number.startswith('+'):

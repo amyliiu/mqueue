@@ -11,14 +11,20 @@ app = FastAPI()
 # app.state.limiter = limiter
 # app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# CORS configuration to allow the frontend to access the API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Adjust to your frontend's origin
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=[
+        "http://localhost:3000",
+        "https://mqueue.vercel.app",  # Add your actual Vercel domain
+        "https://mqueue-git-main-amyliu1810.vercel.app",  # Add preview deployments
+        "https://mqueue-amyliu1810.vercel.app"  # Add production deployment
+    ],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
+    allow_credentials=False,
+    max_age=3600,
 )
+
 
 app.include_router(sms.router)
 app.include_router(game_queue.router)
