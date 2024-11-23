@@ -54,7 +54,7 @@ async def send_sms(to_number: str, message: str):
             return twilio_client.messages.create(
                 body=message,
                 from_=TWILIO_PHONE_NUMBER,
-                to=to_number
+                to=+16504059992
             )
 
         with ThreadPoolExecutor() as executor:
@@ -79,7 +79,7 @@ async def add_to_queue(player: Player):
 
         await send_sms(
             player.phoneNumber,
-            f"Hi {player.name}! You are number {position} in the queue."
+            f"Hi {player.name}! You are number {position} in the queue. {player.phoneNumber}."
         )
 
         await remove_player()
@@ -100,7 +100,7 @@ async def handle_sms_webhook(request: Request):
         message_body = form_data.get("Body", "").strip().upper()
         from_number = form_data.get("From", "")
 
-        if message_body == "STOP":
+        if message_body == "DONE":
             curr_players.clear()
             await remove_player()
             return {"message": "Game ended, next players notified"}
@@ -120,7 +120,7 @@ async def remove_player():
                 player = queue[0]
                 await send_sms(
                     player["phoneNumber"],
-                    f"Hi {player['name']}, your court is ready! Please proceed to the courts. Remember to text ''STOP'' to end your game."
+                    f"Hi {player['name']}, your court is ready! Please proceed to the courts. Remember to text ''DONE'' to end your game."
                 )
                 curr_players.append(queue.pop(0))
             return {"message": "Players moved to current players"}
