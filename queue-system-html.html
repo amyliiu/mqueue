@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MQueue</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Initial Form Page -->
+    <div class="container" id="form-page">
+        <h1 class="title">MQueue</h1>
+        <form class="queue-form" id="queueForm">
+            <input 
+                type="text" 
+                class="input-field" 
+                id="name" 
+                placeholder="Name *" 
+                required
+            >
+            <input 
+                type="tel" 
+                class="input-field" 
+                id="phone" 
+                placeholder="Phone Number *" 
+                required
+            >
+            <div class="checkbox-container">
+                <input type="checkbox" id="consent" required>
+                <label for="consent">By providing your information you opt in to receiving texts from our service. Messaging rates may apply.</label>
+            </div>
+            <button type="submit" class="submit-button" id="submitBtn" disabled>
+                Add to Queue
+            </button>
+        </form>
+    </div>
+
+    <!-- Queue Status Page -->
+    <div class="container" id="queue-page" style="display: none;">
+        <h1 class="title">MQueue</h1>
+        <div class="queue-status">
+            <p>You are</p>
+            <div class="queue-number">Nth</div>
+            <p>in the Queue!</p>
+        </div>
+        <div class="queue-grid" id="queueGrid">
+            <!-- Queue items will be dynamically inserted here -->
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

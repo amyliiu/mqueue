@@ -1,65 +1,58 @@
-/* client/app/globals.css */
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
+:root {
+  --primary-color: #14213d;
+  --highlight-color: #e5e5f7;
+  --text-color: #333;
+  --shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --radius: 0.5rem;
+@layer components {
+  .container {
+    @apply max-w-md mx-auto p-5;
   }
 
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+  .title {
+    @apply text-4xl font-bold text-[var(--primary-color)] mb-8 text-center;
   }
-}
 
-@layer base {
-  * {
-    @apply border-border;
+  .queue-form {
+    @apply flex flex-col gap-4;
   }
-  body {
-    @apply bg-background text-foreground;
+
+  .input-field {
+    @apply p-3 border border-gray-200 rounded-lg text-base bg-[var(--highlight-color)] 
+    transition-colors focus:outline-none focus:border-[var(--primary-color)];
+  }
+
+  .checkbox-container {
+    @apply flex items-center gap-2 my-4 text-sm text-[var(--text-color)];
+  }
+
+  .submit-button {
+    @apply px-6 py-3 bg-[var(--primary-color)] text-white rounded-lg text-base 
+    cursor-pointer transition-opacity disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .queue-status {
+    @apply text-center mb-8;
+  }
+
+  .queue-number {
+    @apply text-3xl text-[var(--primary-color)] font-bold;
+  }
+
+  .queue-grid {
+    @apply grid grid-cols-2 gap-4 mt-8;
+  }
+
+  .queue-item {
+    @apply p-4 bg-[var(--highlight-color)] rounded-lg text-center;
+  }
+
+  .queue-item.current {
+    @apply bg-[var(--primary-color)] text-white;
   }
 }

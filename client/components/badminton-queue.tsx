@@ -1,24 +1,31 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 
-const API_URL = process.env.BACKEND_API_URL || 'http://localhost:8000';
-//const API_URL = 'http://localhost:8000';
-console.log('API_URL:', API_URL);
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8000';
 
 export default function BadmintonQueue() {
   const [queue, setQueue] = useState<Array<{ name: string; phoneNumber: string }>>([]);
-  const [isClient, setIsClient] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
+  const [showQueueStatus, setShowQueueStatus] = useState(false);
+  const [queuePosition, setQueuePosition] = useState(0);
 
   useEffect(() => {
     getQueue();
   }, []);
 
+  const getNumberSuffix = (number: number) => {
+    const j = number % 10;
+    const k = number % 100;
+    if (j === 1 && k !== 11) return "st";
+    if (j === 2 && k !== 12) return "nd";
+    if (j === 3 && k !== 13) return "rd";
+    return "th";
+  };
+
   async function getQueue() {
     try {
       const response = await fetch(`${API_URL}/api/v1/queue`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setQueue(data);
     } catch (error) {
@@ -26,107 +33,98 @@ export default function BadmintonQueue() {
       setQueue([]);
     }
   }
+  async function addToQueue(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsLoading(true);
+  
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const name = formData.get('name') as string;
+    let phoneNumber = formData.get('phoneNumber') as string;
+  
+    try {
+      if (name.length < 2) {
+        throw new Error('Name must be at least 2 characters long');
+      }
+  
+      phoneNumber = phoneNumber.replace(/\D/g, '');
+      if (phoneNumber.length === 10) {
+        phoneNumber = `+1${phoneNumber}`;
+      } else if (phoneNumber.length === 11 && phoneNumber.startsWith('1')) {
+        phoneNumber = `+${phoneNumber}`;
+      } else {
+        throw new Error('Please enter a valid 10-digit phone number');
+      }
 
-async function addToQueue(event: React.FormEvent<HTMLFormElement>) {
-  event.preventDefault();
-  const form = event.currentTarget;
-  const formData = new FormData(form);
-  const name = formData.get('name') as string;
-  let phoneNumber = formData.get('phoneNumber') as string;
-
-  if (!phoneNumber.startsWith('+')) {
-    phoneNumber = `+1${phoneNumber.replace(/\D/g, '')}`;
-  }
-
-  try {
-    const response = await fetch(`${API_URL}/api/v1/queue`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ name, phoneNumber }),
+      console.log('Form values:', {
+        name: formData.get('name'),
+        phoneNumber: formData.get('phoneNumber')
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to add to queue');
-    }
-
-    form.reset();
-    await getQueue();
+      const response = await fetch(`${API_URL}/api/v1/queue`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, phoneNumber }),
+      });
+  
+      const data = await response.json();
+      
+      if (!response.ok) {
+        // Handle the error response from the server properly
+        throw new Error(data.detail || JSON.stringify(data) || 'Failed to add to queue');
+      }
+  
+      await getQueue();
+      setQueuePosition(data.position);
+      setShowQueueStatus(true);
     } catch (error) {
       console.error('Error:', error);
-    } 
-
-  //   if (!response.ok) {
-  //     const errorData = await response.json().catch(() => null);
-  //     throw new Error(
-  //       errorData?.message || 
-  //       `Failed to add player to queue. Status: ${response.status}`
-  //     );
-  //   }
-
-  //   form.reset();
-  //   await getQueue();
-  //   //event.currentTarget.reset();
-  //   // ^^ does this line need to be there? it works when its commented out
-
-  // } catch (error: unknown) {
-  //   if (error instanceof Error) {
-  //     console.error('Error adding player to queue:', error.message);
-  //   } else {
-  //     console.error('Error adding player to queue:', String(error));
-  //   }
-  // }
-}
-
+    } finally {
+      setIsLoading(false);
+    }
+  }
+  
+  // Update your form input
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Badminton Queue</h1>
-      
-      {/* Add to Queue Form */}
-      <form onSubmit={addToQueue} className="mb-8">
-        <div className="flex flex-col gap-4 max-w-md">
-          <input
-            type="text"
-            name="name"
-            placeholder="Name"
-            required
-            className="p-2 border rounded"
-          />
-          <input
-            type="tel"
-            name="phoneNumber"
-            placeholder="Phone Number"
-            required
-            className="p-2 border rounded"
-          />
-          <h5 className='space-y-2'>By providing your information you opt in to recieving texts from our service. Messaging rates may apply.</h5>
-          <button
-            type="submit"
-            className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
-          >
-            Add to Queue
-          </button>
+    <div className="container">
+      <h1 className="title">MQueue</h1>
+      <form onSubmit={addToQueue} className="queue-form">
+        <input
+          type="text"
+          name="name"
+          className="input-field"
+          placeholder="Name *"
+          pattern="[A-Za-z\s-]+"
+          title="Name can only contain letters, spaces, and hyphens"
+          required
+          minLength={2}
+        />
+        <input
+          type="tel"
+          name="phoneNumber"
+          className="input-field"
+          placeholder="Phone Number * (e.g., 1234567890)"
+          pattern="^\+?1?\d{10}$"
+          title="Please enter a valid 10-digit phone number"
+          required
+        />
+        <div className="checkbox-container">
+          <input type="checkbox" id="consent" required />
+          <label htmlFor="consent">
+            By providing your information you opt in to receiving texts from our service. 
+            Messaging rates may apply.
+          </label>
         </div>
+        <button
+          type="submit"
+          className="submit-button"
+          disabled={isLoading}
+        >
+          {isLoading ? 'Adding...' : 'Add to Queue'}
+        </button>
       </form>
-
-      {/* Queue Display */}
-      <div>
-        <h2 className="text-xl font-semibold mb-2">Current Queue</h2>
-        {queue.length === 0 ? (
-          <p>No one in queue</p>
-        ) : (
-          <ul className="space-y-2">
-            {queue.map((player, index) => (
-              <li key={index} className="p-2 bg-gray-100 rounded">
-                {player.name} - {player.phoneNumber}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
     </div>
   );
 }
