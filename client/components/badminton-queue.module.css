@@ -2,10 +2,24 @@
   max-width: 400px;
   margin: 0 auto;
   padding: 20px;
+}
+
+/* Add new class for the queue status container */
+.queueStatusContainer {
+  min-height: 50vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.queueStatus {
   text-align: center;
+  padding: 2rem 0;
+  width: 100%;
 }
 
 .title {
+  text-align: center;
   color: var(--primary-color);
   font-size: 2.5rem;
   font-weight: bold;
@@ -53,27 +67,39 @@
 /* Queue Status Page Styles */
 .queueStatus {
   text-align: center;
+  margin: 0;
+  padding: 2rem 0;
+  width: 100%;
+}
+
+.queueHeader {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #14213d;
+  margin: -1rem 0;
 }
 
 .positionDisplay {
   font-size: 4rem;
   font-weight: bold;
-  color: var(--primary-color);
-  margin: 1rem 0;
+  color: #14213d;
+  margin: 0.5rem 0;
 }
 
 .menuList {
-  margin-top: 2rem;
+  margin-top: 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .menuItem {
   padding: 1rem;
-  background-color: var(--highlight-color);
-  margin: 0.5rem 0;
+  background-color: #e5e5f7;
   border-radius: 8px;
 }
 
 .activeMenuItem {
-  background-color: var(--primary-color);
+  background-color: #14213d;
   color: white;
 } 

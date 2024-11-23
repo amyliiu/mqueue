@@ -1,5 +1,5 @@
 "use client";
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import styles from './badminton-queue.module.css';
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8000';
@@ -7,22 +7,81 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:800
 function getOrdinalSuffix(position: number): string {
   const j = position % 10;
   const k = position % 100;
-  if (j === 1 && k !== 11) {
-    return 'st';
+  if (j === 1 && k !== 11) return "st";
+  if (j === 2 && k !== 12) return "nd";
+  if (j === 3 && k !== 13) return "rd";
+  return "th";
+}
+
+function generateQueueItems(position: number) {
+  const items = [];
+  
+  // Generate items only up to and including user's position
+  for (let i = 0; i < position; i++) {
+    items.push({
+      name: i === position - 1 ? 'You' : 'Anonymous',
+      isCurrent: i === position - 1
+    });
   }
-  if (j === 2 && k !== 12) {
-    return 'nd';
-  }
-  if (j === 3 && k !== 13) {
-    return 'rd';
-  }
-  return 'th';
+  
+  return items;
 }
 
 export default function BadmintonQueue() {
   const [isLoading, setIsLoading] = useState(false);
   const [showQueueStatus, setShowQueueStatus] = useState(false);
   const [queuePosition, setQueuePosition] = useState<number | null>(null);
+  const [queueItems, setQueueItems] = useState<Array<{ name: string, isCurrent: boolean }>>([]);
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
+    if (showQueueStatus && queuePosition) {
+      // Initial fetch
+      fetchQueueStatus();
+
+      // Set up polling every 5 seconds
+      intervalId = setInterval(fetchQueueStatus, 5000);
+    }
+
+    // Cleanup on unmount or when showQueueStatus changes
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [showQueueStatus, queuePosition]);
+
+  async function fetchQueueStatus() {
+    try {
+      const response = await fetch(`${API_URL}/api/v1/queue`);
+      const data = await response.json();
+      
+      if (response.ok && data && Array.isArray(data.queue)) {
+        // Check if we're still in the queue
+        const stillInQueue = data.queue.some((player: any) => 
+          player.position === queuePosition
+        );
+
+        if (!stillInQueue) {
+          setShowQueueStatus(false);
+          return;
+        }
+
+        // Update queue items
+        const items = [];
+        for (let i = 0; i < queuePosition!; i++) {
+          items.push({
+            name: i === queuePosition! - 1 ? 'You' : 'Anonymous',
+            isCurrent: i === queuePosition! - 1
+          });
+        }
+        setQueueItems(items);
+      }
+    } catch (error) {
+      console.error('Error fetching queue status:', error);
+    }
+  }
 
   async function addToQueue(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -48,7 +107,9 @@ export default function BadmintonQueue() {
         throw new Error(data.detail || 'Failed to add to queue');
       }
 
-      setQueuePosition(data.position);
+      const position = data.position;
+      setQueuePosition(position);
+      setQueueItems(generateQueueItems(position));
       setShowQueueStatus(true);
     } catch (error) {
       console.error('Error:', error);
@@ -60,19 +121,24 @@ export default function BadmintonQueue() {
   return (
     <div className={styles.container}>
       {showQueueStatus ? (
-        <div className={styles.queueStatus}>
-          <h2>You are</h2>
-          <div className={styles.positionDisplay}>
-            {queuePosition}{getOrdinalSuffix(queuePosition!)}
-          </div>
-          <h2>in the Queue!</h2>
-          
-          <div className={styles.menuList}>
-            <div className={styles.menuItem}>Menu item</div>
-            <div className={styles.menuItem}>Menu item</div>
-            <div className={styles.menuItem}>Menu item</div>
-            <div className={styles.menuItem}>Menu item</div>
-            <div className={`${styles.menuItem} ${styles.activeMenuItem}`}>Menu item</div>
+        <div className={styles.queueStatusContainer}>
+          <div className={styles.queueStatus}>
+            <div className={styles.queueHeader}>You are</div>
+            <div className={styles.positionDisplay}>
+              {queuePosition}{getOrdinalSuffix(queuePosition!)}
+            </div>
+            <div className={styles.queueHeader}>in the Queue!</div>
+            
+            <div className={styles.menuList}>
+              {queueItems.map((item, index) => (
+                <div 
+                  key={index}
+                  className={`${styles.menuItem} ${item.isCurrent ? styles.activeMenuItem : ''}`}
+                >
+                  {item.name}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       ) : (

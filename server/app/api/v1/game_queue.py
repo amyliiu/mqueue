@@ -5,41 +5,26 @@ from pydantic import BaseModel
 from twilio.rest import Client
 from dotenv import load_dotenv
 import os
-import re
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
-# Load environment variables
 load_dotenv()
-
-# Get Twilio credentials
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
 TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER')
 
-# Debug logging
 print("Twilio Configuration:")
 print(f"Account SID exists: {bool(TWILIO_ACCOUNT_SID)}")
 print(f"Auth Token exists: {bool(TWILIO_AUTH_TOKEN)}")
 print(f"Phone Number: {TWILIO_PHONE_NUMBER}")
 
-# Initialize router and state
 router = APIRouter(prefix="/api/v1")
 queue = []
 curr_players = []
 
-
-from fastapi import APIRouter, Request, HTTPException
-from pydantic import BaseModel, validator, constr
-from typing import Optional
-import re
-# ... other imports remain the same ...
-
 class Player(BaseModel):
     name: str
     phoneNumber: str
-
-
 
 def get_twilio_client():
     """Get or create Twilio client"""
@@ -92,7 +77,6 @@ async def add_to_queue(player: Player):
         queue.append({"name": player.name, "phoneNumber": player.phoneNumber})
         position = len(queue)
 
-        # Send SMS notification
         await send_sms(
             player.phoneNumber,
             f"Hi {player.name}! You are number {position} in the queue."
@@ -136,7 +120,7 @@ async def remove_player():
                 player = queue[0]
                 await send_sms(
                     player["phoneNumber"],
-                    f"Hi {player['name']}! Your court is ready! Please proceed to the courts."
+                    f"Hi {player['name']}, your court is ready! Please proceed to the courts. Remember to text ''STOP'' to end your game."
                 )
                 curr_players.append(queue.pop(0))
             return {"message": "Players moved to current players"}
