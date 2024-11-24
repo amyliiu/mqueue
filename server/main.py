@@ -15,7 +15,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://mqueue-six.vercel.app/",
+        "https://mqueue-six.vercel.app",
         "https://mqueue-amyliius-projects.vercel.app",  # Add your actual Vercel domain
         "https://mqueue-git-mainv2-amyliius-projects.vercel.app",  # Add preview deployments
     ],
