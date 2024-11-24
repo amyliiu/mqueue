@@ -15,9 +15,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://mqueue-amyliius-projects.vercel.app/",  # Add your actual Vercel domain
-        "https://mqueue-git-main-amyliius-projects.vercel.app/",  # Add preview deployments
-        "https://mqueue-ej80jgkq3-amyliius-projects.vercel.app/"  # Add production deployment
+        "https://mqueue-amyliius-projects.vercel.app",  # Add your actual Vercel domain
+        "https://mqueue-git-main-amyliius-projects.vercel.app",  # Add preview deployments
+        "https://mqueue-ej80jgkq3-amyliius-projects.vercel.app"  # Add production deployment
     ],
     allow_methods=["*"],  # More permissive for testing
     allow_headers=["*"],  # More permissive for testing
@@ -26,7 +26,6 @@ app.add_middleware(
     max_age=3600,
 )
 
-# i need to make a commit
 
 app.include_router(sms.router)
 app.include_router(game_queue.router)
