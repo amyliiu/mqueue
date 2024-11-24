@@ -1,132 +1,185 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
+import styles from './badminton-queue.module.css';
 
-const API_URL = process.env.BACKEND_API_URL || 'http://localhost:8000';
-//const API_URL = 'http://localhost:8000';
-console.log('API_URL:', API_URL);
-
-export default function BadmintonQueue() {
-  const [queue, setQueue] = useState<Array<{ name: string; phoneNumber: string }>>([]);
-  const [isClient, setIsClient] = useState(false)
-
-  useEffect(() => {
-    getQueue();
-  }, []);
-
-  async function getQueue() {
-    try {
-      const response = await fetch(`${API_URL}/api/v1/queue`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setQueue(data);
-    } catch (error) {
-      console.error('Error fetching queue:', error);
-      setQueue([]);
-    }
-  }
-
-async function addToQueue(event: React.FormEvent<HTMLFormElement>) {
-  event.preventDefault();
-  const form = event.currentTarget;
-  const formData = new FormData(form);
-  const name = formData.get('name') as string;
-  let phoneNumber = formData.get('phoneNumber') as string;
-
-  if (!phoneNumber.startsWith('+')) {
-    phoneNumber = `+1${phoneNumber.replace(/\D/g, '')}`;
-  }
-
-  try {
-    const response = await fetch(`${API_URL}/api/v1/queue`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ name, phoneNumber }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to add to queue');
-    }
-
-    form.reset();
-    await getQueue();
-    } catch (error) {
-      console.error('Error:', error);
-    } 
-
-  //   if (!response.ok) {
-  //     const errorData = await response.json().catch(() => null);
-  //     throw new Error(
-  //       errorData?.message || 
-  //       `Failed to add player to queue. Status: ${response.status}`
-  //     );
-  //   }
-
-  //   form.reset();
-  //   await getQueue();
-  //   //event.currentTarget.reset();
-  //   // ^^ does this line need to be there? it works when its commented out
-
-  // } catch (error: unknown) {
-  //   if (error instanceof Error) {
-  //     console.error('Error adding player to queue:', error.message);
-  //   } else {
-  //     console.error('Error adding player to queue:', String(error));
-  //   }
-  // }
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+console.log(API_URL);
+if (!API_URL) {
+  console.error('NEXT_PUBLIC_BACKEND_API_URL is not defined');
 }
 
-  return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Badminton Queue</h1>
-      
-      {/* Add to Queue Form */}
-      <form onSubmit={addToQueue} className="mb-8">
-        <div className="flex flex-col gap-4 max-w-md">
-          <input
-            type="text"
-            name="name"
-            placeholder="Name"
-            required
-            className="p-2 border rounded"
-          />
-          <input
-            type="tel"
-            name="phoneNumber"
-            placeholder="Phone Number"
-            required
-            className="p-2 border rounded"
-          />
-          <h5 className='space-y-2'>By providing your information you opt in to recieving texts from our service. Messaging rates may apply.</h5>
-          <button
-            type="submit"
-            className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
-          >
-            Add to Queue
-          </button>
-        </div>
-      </form>
+function getOrdinalSuffix(position: number): string {
+  const j = position % 10;
+  const k = position % 100;
+  if (j === 1 && k !== 11) return "st";
+  if (j === 2 && k !== 12) return "nd";
+  if (j === 3 && k !== 13) return "rd";
+  return "th";
+}
 
-      {/* Queue Display */}
-      <div>
-        <h2 className="text-xl font-semibold mb-2">Current Queue</h2>
-        {queue.length === 0 ? (
-          <p>No one in queue</p>
-        ) : (
-          <ul className="space-y-2">
-            {queue.map((player, index) => (
-              <li key={index} className="p-2 bg-gray-100 rounded">
-                {player.name} - {player.phoneNumber}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+function generateQueueItems(position: number) {
+  const items = [];
+  
+  // Generate items only up to and including user's position
+  for (let i = 0; i < position; i++) {
+    items.push({
+      name: i === position - 1 ? 'You' : 'Anonymous',
+      isCurrent: i === position - 1
+    });
+  }
+  
+  return items;
+}
+
+export default function BadmintonQueue() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [showQueueStatus, setShowQueueStatus] = useState(false);
+  const [queuePosition, setQueuePosition] = useState<number | null>(null);
+  const [queueItems, setQueueItems] = useState<Array<{ name: string, isCurrent: boolean }>>([]);
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
+    if (showQueueStatus && queuePosition) {
+      // Initial fetch
+      fetchQueueStatus();
+
+      // Set up polling every 5 seconds
+      intervalId = setInterval(fetchQueueStatus, 5000);
+    }
+
+    // Cleanup on unmount or when showQueueStatus changes
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [showQueueStatus, queuePosition]);
+
+  async function fetchQueueStatus() {
+    try {
+      const response = await fetch(`${API_URL}/api/v1/queue`);
+      const data = await response.json();
+      
+      if (response.ok && data && Array.isArray(data.queue)) {
+        // Check if we're still in the queue
+        const stillInQueue = data.queue.some((player: any) => 
+          player.position === queuePosition
+        );
+
+        if (!stillInQueue) {
+          setShowQueueStatus(false);
+          return;
+        }
+
+        // Update queue items
+        const items = [];
+        for (let i = 0; i < queuePosition!; i++) {
+          items.push({
+            name: i === queuePosition! - 1 ? 'You' : 'Anonymous',
+            isCurrent: i === queuePosition! - 1
+          });
+        }
+        setQueueItems(items);
+      }
+    } catch (error) {
+      console.error('Error fetching queue status:', error);
+    }
+  }
+
+  async function addToQueue(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsLoading(true);
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const name = formData.get('name') as string;
+    const phoneNumber = formData.get('phoneNumber') as string;
+
+    try {
+      const response = await fetch(`${API_URL}/api/v1/queue`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, phoneNumber }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to add to queue');
+      }
+
+      const position = data.position;
+      setQueuePosition(position);
+      setQueueItems(generateQueueItems(position));
+      setShowQueueStatus(true);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  return (
+    <div className={styles.container}>
+      {showQueueStatus ? (
+        <div className={styles.queueStatusContainer}>
+          <div className={styles.queueStatus}>
+            <div className={styles.queueHeader}>You are</div>
+            <div className={styles.positionDisplay}>
+              {queuePosition}{getOrdinalSuffix(queuePosition!)}
+            </div>
+            <div className={styles.queueHeader}>in the Queue!</div>
+            
+            <div className={styles.menuList}>
+              {queueItems.map((item, index) => (
+                <div 
+                  key={index}
+                  className={`${styles.menuItem} ${item.isCurrent ? styles.activeMenuItem : ''}`}
+                >
+                  {item.name}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          <h1 className={styles.title}>MQueue</h1>
+          <form onSubmit={addToQueue} className={styles.queueForm}>
+            <input
+              type="text"
+              name="name"
+              className={styles.inputField}
+              placeholder="Name *"
+              required
+            />
+            <input
+              type="tel"
+              name="phoneNumber"
+              className={styles.inputField}
+              placeholder="Phone Number *"
+              required
+            />
+            <div className={styles.checkboxContainer}>
+              <input type="checkbox" id="consent" required />
+              <label htmlFor="consent">
+                By providing your information you opt in to receiving texts from our service. 
+                Messaging rates may apply.
+              </label>
+            </div>
+            <button
+              type="submit"
+              className={styles.submitButton}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Adding...' : 'Add to Queue'}
+            </button>
+          </form>
+        </>
+      )}
     </div>
   );
 }
