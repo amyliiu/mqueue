@@ -15,13 +15,14 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://mqueue.vercel.app",  # Add your actual Vercel domain
-        "https://mqueue-git-main-amyliu1810.vercel.app",  # Add preview deployments
-        "https://mqueue-amyliu1810.vercel.app"  # Add production deployment
+        "https://mqueue-amyliius-projects.vercel.app/",  # Add your actual Vercel domain
+        "https://mqueue-git-main-amyliius-projects.vercel.app/",  # Add preview deployments
+        "https://mqueue-ej80jgkq3-amyliius-projects.vercel.app/"  # Add production deployment
     ],
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization"],
-    allow_credentials=False,
+    allow_methods=["*"],  # More permissive for testing
+    allow_headers=["*"],  # More permissive for testing
+    allow_credentials=True,  # Changed to True if you need to support credentials
+    expose_headers=["*"],  # Expose all headers
     max_age=3600,
 )
 
