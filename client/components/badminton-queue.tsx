@@ -2,7 +2,7 @@
 import { useState, FormEvent, useEffect } from 'react';
 import styles from './badminton-queue.module.css';
 
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8000';
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 function getOrdinalSuffix(position: number): string {
   const j = position % 10;
