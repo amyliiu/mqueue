@@ -54,7 +54,7 @@ async def send_sms(to_number: str, message: str):
             return twilio_client.messages.create(
                 body=message,
                 from_=TWILIO_PHONE_NUMBER,
-                to=+16504059992
+                to=to_number
             )
 
         with ThreadPoolExecutor() as executor:
