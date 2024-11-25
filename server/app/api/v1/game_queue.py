@@ -92,7 +92,7 @@ async def add_to_queue(player: Player):
 async def get_curr_players():
     return curr_players
 
-@router.post("/stop")
+@router.post("/done")
 async def handle_sms_webhook(request: Request):
     """Handle SMS webhook for stopping the game"""
     try:
