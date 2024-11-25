@@ -121,6 +121,9 @@ async def handle_sms_webhook(request: Request):
     message_body = form_data.get("Body", "").strip().upper()
     from_number = form_data.get("From", "")
 
+    # Log the incoming message
+    print(f"Received message: {message_body} from {from_number}")
+
     # Create a Twilio MessagingResponse object
     response = MessagingResponse()
 
@@ -138,4 +141,4 @@ async def handle_sms_webhook(request: Request):
 
     # Return the TwiML response
     return Response(content=str(response), media_type="text/xml")
-
+app.include_router(router)
