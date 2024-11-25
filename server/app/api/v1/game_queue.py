@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 import os
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+from fastapi.responses import Response
+from twilio.twiml.messaging_response import MessagingResponse
 
 load_dotenv()
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
@@ -94,21 +96,22 @@ async def get_curr_players():
 
 @router.post("/done")
 async def handle_sms_webhook(request: Request):
-    """Handle SMS webhook for stopping the game"""
-    try:
-        form_data = await request.form()
-        message_body = form_data.get("Body", "").strip().upper()
-        from_number = form_data.get("From", "")
+    """Handle SMS webhook for responding to messages"""
+    form_data = await request.form()
+    message_body = form_data.get("Body", "").strip().upper()
+    from_number = form_data.get("From", "")
 
-        if message_body == "DONE":
-            curr_players.clear()
-            await remove_player()
-            return {"message": "Game ended, next players notified"}
-        
-        return {"message": "Message received"}
-    except Exception as e:
-        print(f"Error in webhook: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+    # Create a Twilio MessagingResponse object
+    response = MessagingResponse()
+
+    # Respond based on the message content
+    if message_body == "DONE":
+        response.message("Thank you! Your request has been received.")
+    else:
+        response.message("Sorry, I didn't understand that. Please send 'DONE' to proceed.")
+
+    # Return the TwiML response
+    return Response(content=str(response), media_type="text/xml")
 
 async def remove_player():
     print(f"curr_players: {curr_players}")
