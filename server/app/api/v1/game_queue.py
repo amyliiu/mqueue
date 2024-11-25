@@ -94,7 +94,7 @@ async def add_to_queue(player: Player):
 async def get_curr_players():
     return curr_players
 
-@router.post("/api/v1/done")
+@router.post("/done")
 async def handle_sms_webhook(request: Request):
     """Handle SMS webhook for responding to messages"""
     form_data = await request.form()
