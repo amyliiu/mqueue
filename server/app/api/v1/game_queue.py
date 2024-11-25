@@ -1,6 +1,6 @@
 from dataclasses import Field
 from wsgiref.validate import validator
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, FastAPI, Request, HTTPException
 from pydantic import BaseModel
 from twilio.rest import Client
 from dotenv import load_dotenv
@@ -21,6 +21,7 @@ print(f"Auth Token exists: {bool(TWILIO_AUTH_TOKEN)}")
 print(f"Phone Number: {TWILIO_PHONE_NUMBER}")
 
 router = APIRouter(prefix="/api/v1")
+app = FastAPI()
 queue = []
 curr_players = []
 
@@ -66,6 +67,25 @@ async def send_sms(to_number: str, message: str):
     except Exception as e:
         print(f"Error sending SMS: {str(e)}")
 
+async def remove_player():
+    print(f"curr_players: {curr_players}")
+    print(f"queue: {queue}")
+
+    if len(curr_players) == 0 and len(queue) >= 4:
+        try:
+            for _ in range(4):
+                player = queue[0]
+                await send_sms(
+                    player["phoneNumber"],
+                    f"Hi {player['name']}, your court is ready! Please proceed to the courts. Remember to text ''DONE'' to end your game."
+                )
+                curr_players.append(queue.pop(0))
+            return {"message": "Players moved to current players"}
+        except Exception as e:
+            print(f"Error moving players: {str(e)}")
+            raise HTTPException(status_code=500, detail=str(e))
+    return {"message": "No players to move"}
+
 @router.get("/queue")
 async def get_queue():
     """Get all players in queue"""
@@ -106,28 +126,16 @@ async def handle_sms_webhook(request: Request):
 
     # Respond based on the message content
     if message_body == "DONE":
-        response.message("Thank you!")
+        # Logic to remove the player from the queue
+        if any(player["phoneNumber"] == from_number for player in queue):
+            # Call remove_player function
+            await remove_player(from_number)
+            response.message("Thank you! You have been removed from the queue.")
+        else:
+            response.message("You are not in the queue.")
     else:
         response.message("Sorry, I didn't understand that. Please send 'DONE' to proceed.")
 
     # Return the TwiML response
     return Response(content=str(response), media_type="text/xml")
 
-async def remove_player():
-    print(f"curr_players: {curr_players}")
-    print(f"queue: {queue}")
-
-    if len(curr_players) == 0 and len(queue) >= 4:
-        try:
-            for _ in range(4):
-                player = queue[0]
-                await send_sms(
-                    player["phoneNumber"],
-                    f"Hi {player['name']}, your court is ready! Please proceed to the courts. Remember to text ''DONE'' to end your game."
-                )
-                curr_players.append(queue.pop(0))
-            return {"message": "Players moved to current players"}
-        except Exception as e:
-            print(f"Error moving players: {str(e)}")
-            raise HTTPException(status_code=500, detail=str(e))
-    return {"message": "No players to move"}
