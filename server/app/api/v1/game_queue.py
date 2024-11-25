@@ -94,7 +94,7 @@ async def add_to_queue(player: Player):
 async def get_curr_players():
     return curr_players
 
-@router.post("/done")
+@router.post("/api/v1/done")
 async def handle_sms_webhook(request: Request):
     """Handle SMS webhook for responding to messages"""
     form_data = await request.form()
@@ -106,7 +106,7 @@ async def handle_sms_webhook(request: Request):
 
     # Respond based on the message content
     if message_body == "DONE":
-        response.message("Thank you! Your request has been received.")
+        response.message("Thank you!")
     else:
         response.message("Sorry, I didn't understand that. Please send 'DONE' to proceed.")
 
