@@ -9,6 +9,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from fastapi.responses import Response
 from twilio.twiml.messaging_response import MessagingResponse
+import logging
 
 load_dotenv()
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
@@ -24,6 +25,9 @@ router = APIRouter(prefix="/api/v1")
 app = FastAPI()
 queue = []
 curr_players = []
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 class Player(BaseModel):
     name: str
@@ -122,7 +126,7 @@ async def handle_sms_webhook(request: Request):
     from_number = form_data.get("From", "")
 
     # Log the incoming message
-    print(f"Received message: {message_body} from {from_number}")
+    logging.info(f"Received message: {message_body} from {from_number}")
 
     # Create a Twilio MessagingResponse object
     response = MessagingResponse()
