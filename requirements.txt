@@ -1,4 +1,1 @@
-fastapi==0.95.0
-uvicorn==0.22.0
-python-multipart==0.0.6
-twilio==7.16.0 
+twilio
