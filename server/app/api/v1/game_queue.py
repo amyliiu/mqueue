@@ -108,11 +108,6 @@ async def add_to_queue(player: Player):
             f"Hi {player.name}! You are number {position} in the queue. {player.phoneNumber}."
         )
 
-        if len(queue) >= 4:
-            global curr_players
-            curr_players = queue[:4]
-            queue = queue[4:]
-
         await remove_player()
         return {"message": "Player added successfully", "position": position}
     except Exception as e:
@@ -125,7 +120,7 @@ async def get_curr_players():
 
 @router.post("/done")
 async def handle_sms_webhook(request: Request):
-    """Handle SMS webhook for responding to messages"""                                                                 
+    """Handle SMS webhook for responding to messages"""
     form_data = await request.form()
     message_body = form_data.get("Body", "").strip().upper()
     from_number = form_data.get("From", "")
@@ -136,16 +131,15 @@ async def handle_sms_webhook(request: Request):
     # Create a Twilio MessagingResponse object
     response = MessagingResponse()
 
+    # Respond based on the message content
     if message_body == "DONE":
-        # Logic to remove the player from the current players
-        global curr_players
-        player_to_remove = next((player for player in curr_players if player["phoneNumber"] == from_number), None)
-
-        if player_to_remove:
-            curr_players.remove(player_to_remove)
-            response.message("Thank you! You have been removed from the current game.")
+        # Logic to remove the player from the queue
+        if any(player["phoneNumber"] == from_number for player in curr_players):
+            # Call remove_player function
+            await remove_player(from_number)
+            response.message("Thank you! You have been removed from the queue.")
         else:
-            response.message("You are not currently playing in a game.")
+            response.message("You are not in the queue.")
     else:
         response.message("Sorry, I didn't understand that. Please send 'DONE' to proceed.")
 
