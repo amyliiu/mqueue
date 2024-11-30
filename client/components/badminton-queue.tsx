@@ -2,12 +2,12 @@
 import { useState, FormEvent, useEffect } from 'react';
 import styles from './badminton-queue.module.css';
 
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+const API_URL = "http://localhost:8000"
+//const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 console.log(API_URL);
 if (!API_URL) {
   console.error('NEXT_PUBLIC_BACKEND_API_URL is not defined');
 }
-
 function getOrdinalSuffix(position: number): string {
   const j = position % 10;
   const k = position % 100;
@@ -17,13 +17,12 @@ function getOrdinalSuffix(position: number): string {
   return "th";
 }
 
-function generateQueueItems(position: number) {
+function generateQueueItems(position: number, groupSize: number | null) {
   const items = [];
-  
-  // Generate items only up to and including user's position
+
   for (let i = 0; i < position; i++) {
     items.push({
-      name: i === position - 1 ? 'You' : 'Anonymous',
+      name: i === position - 1 ? `You (${groupSize})` : 'Anonymous',
       isCurrent: i === position - 1
     });
   }
@@ -36,6 +35,8 @@ export default function BadmintonQueue() {
   const [showQueueStatus, setShowQueueStatus] = useState(false);
   const [queuePosition, setQueuePosition] = useState<number | null>(null);
   const [queueItems, setQueueItems] = useState<Array<{ name: string, isCurrent: boolean }>>([]);
+  const [groupSize, setGroupSize] = useState<number | null>(null);
+  const [phoneNumber, setPhoneNumber] = useState<string | null>(null);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
@@ -62,9 +63,12 @@ export default function BadmintonQueue() {
       const data = await response.json();
       
       if (response.ok && data && Array.isArray(data.queue)) {
-        // Check if we're still in the queue
+        console.log('Current Queue:', data.queue);
+        console.log('Current Queue Position:', queuePosition);
+
+        // Check if we're still in the queue by phone number
         const stillInQueue = data.queue.some((player: any) => 
-          player.position === queuePosition
+          player.phoneNumber === phoneNumber
         );
 
         if (!stillInQueue) {
@@ -72,14 +76,7 @@ export default function BadmintonQueue() {
           return;
         }
 
-        // Update queue items
-        const items = [];
-        for (let i = 0; i < queuePosition!; i++) {
-          items.push({
-            name: i === queuePosition! - 1 ? 'You' : 'Anonymous',
-            isCurrent: i === queuePosition! - 1
-          });
-        }
+        const items = generateQueueItems(queuePosition!, groupSize);
         setQueueItems(items);
       }
     } catch (error) {
@@ -94,7 +91,9 @@ export default function BadmintonQueue() {
     const form = event.currentTarget;
     const formData = new FormData(form);
     const name = formData.get('name') as string;
-    const phoneNumber = formData.get('phoneNumber') as string;
+    const phoneNumberInput = formData.get('phoneNumber') as string;
+
+    setPhoneNumber(phoneNumberInput);
 
     try {
       const response = await fetch(`${API_URL}/api/v1/queue`, {
@@ -102,7 +101,7 @@ export default function BadmintonQueue() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, phoneNumber }),
+        body: JSON.stringify({ name, phoneNumber: phoneNumberInput, groupSize }),
       });
 
       const data = await response.json();
@@ -113,7 +112,7 @@ export default function BadmintonQueue() {
 
       const position = data.position;
       setQueuePosition(position);
-      setQueueItems(generateQueueItems(position));
+      setQueueItems(generateQueueItems(position, groupSize));
       setShowQueueStatus(true);
     } catch (error) {
       console.error('Error:', error);
@@ -162,6 +161,14 @@ export default function BadmintonQueue() {
               className={styles.inputField}
               placeholder="Phone Number *"
               required
+            />
+            <input
+              type="number"
+              name="groupSize"
+              className={styles.inputField}
+              placeholder="Number of People in Your Group *"
+              required
+              onChange={(e) => setGroupSize(Number(e.target.value))}
             />
             <div className={styles.checkboxContainer}>
               <input type="checkbox" id="consent" required />
