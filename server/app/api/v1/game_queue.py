@@ -127,10 +127,6 @@ async def handle_sms_webhook(request: Request):
     message_body = form_data.get("Body", "").strip().upper()
     from_number = form_data.get("From", "")
     from_number = from_number[2:]
-
-    if len(from_number) != 10:
-        raise HTTPException(status_code=400, detail="Invalid phone number.")
-        
     # Log the incoming message
     logging.info(f"Received message: {message_body} from {from_number}")
 
