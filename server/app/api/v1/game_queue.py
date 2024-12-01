@@ -9,6 +9,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from fastapi.responses import Response
 from twilio.twiml.messaging_response import MessagingResponse
+import logging
 
 load_dotenv()
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
@@ -29,15 +30,12 @@ game_players = []
 # List of players currently in the queue
 queue_players = []
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+
 class Player(BaseModel):
     name: str
     phoneNumber: str
-
-def format_phone_number(phone_number: str) -> str:
-    """Format phone number to include country code if necessary"""
-    if not phone_number.startswith('+'):
-        return f'+1{phone_number}'  # Adjust the country code as needed
-    return phone_number
 
 def get_twilio_client():
     """Get or create Twilio client"""
@@ -59,7 +57,8 @@ async def send_sms(to_number: str, message: str):
             return
 
         # Format phone number
-        to_number = format_phone_number(to_number)
+        if not to_number.startswith('+'):
+            to_number = f'+1{to_number}'
 
         # Send SMS in thread pool
         def send():
@@ -81,15 +80,11 @@ async def remove_player():
         try:
             for _ in range(4):
                 player = queue_players[0]
-                player["phoneNumber"] = format_phone_number(player["phoneNumber"])  # Format phone number
                 await send_sms(
                     player["phoneNumber"],
                     f"Hi {player['name']}, your court is ready! Please proceed to the courts. Remember to text 'DONE' to end your game."
                 )
                 game_players.append(queue_players.pop(0))  # Move player from queue to game
-            print("Players moved to game:")
-            for player in game_players:
-                print(f" - {player['name']} ({player['phoneNumber']})")
             return {"message": "Players moved to current players"}
         except Exception as e:
             print(f"Error moving players: {str(e)}")
@@ -99,17 +94,11 @@ async def remove_player():
 @router.get("/game")
 async def get_game_players():
     """Get all players currently in the game"""
-    print("Current game players:")
-    for player in game_players:
-        print(f" - {player['name']} ({player['phoneNumber']})")
     return {"gamePlayers": game_players}
 
 @router.get("/queue")
 async def get_queue_players():
     """Get all players currently in the queue"""
-    print("Current queue players:")
-    for player in queue_players:
-        print(f" - {player['name']} ({player['phoneNumber']})")
     return {"queuePlayers": queue_players}
 
 @router.post("/add-to-queue")
@@ -117,7 +106,6 @@ async def add_to_queue(player: Player):
     """Add a player to the queue"""
     try:
         print(f"Adding player: {player.name} ({player.phoneNumber})")
-        player.phoneNumber = format_phone_number(player.phoneNumber)  # Format phone number
         queue_players.append({"name": player.name, "phoneNumber": player.phoneNumber})
         position = len(queue_players)
 
@@ -138,10 +126,9 @@ async def handle_sms_webhook(request: Request):
     form_data = await request.form()
     message_body = form_data.get("Body", "").strip().upper()
     from_number = form_data.get("From", "")
-    from_number = format_phone_number(from_number)  # Format the incoming number
 
-    # Print the incoming message
-    print(f"Received message: {message_body} from {from_number}")
+    # Log the incoming message
+    logging.info(f"Received message: {message_body} from {from_number}")
 
     # Create a Twilio MessagingResponse object
     response = MessagingResponse()
