@@ -9,7 +9,6 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from fastapi.responses import Response
 from twilio.twiml.messaging_response import MessagingResponse
-import logging
 
 load_dotenv()
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
@@ -29,9 +28,6 @@ game_players = []
 
 # List of players currently in the queue
 queue_players = []
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
 
 class Player(BaseModel):
     name: str
@@ -85,6 +81,9 @@ async def remove_player():
                     f"Hi {player['name']}, your court is ready! Please proceed to the courts. Remember to text 'DONE' to end your game."
                 )
                 game_players.append(queue_players.pop(0))  # Move player from queue to game
+            print("Players moved to game:")
+            for player in game_players:
+                print(f" - {player['name']} ({player['phoneNumber']})")
             return {"message": "Players moved to current players"}
         except Exception as e:
             print(f"Error moving players: {str(e)}")
@@ -94,11 +93,17 @@ async def remove_player():
 @router.get("/game")
 async def get_game_players():
     """Get all players currently in the game"""
+    print("Current game players:")
+    for player in game_players:
+        print(f" - {player['name']} ({player['phoneNumber']})")
     return {"gamePlayers": game_players}
 
 @router.get("/queue")
 async def get_queue_players():
     """Get all players currently in the queue"""
+    print("Current queue players:")
+    for player in queue_players:
+        print(f" - {player['name']} ({player['phoneNumber']})")
     return {"queuePlayers": queue_players}
 
 @router.post("/add-to-queue")
@@ -127,8 +132,8 @@ async def handle_sms_webhook(request: Request):
     message_body = form_data.get("Body", "").strip().upper()
     from_number = form_data.get("From", "")
 
-    # Log the incoming message
-    logging.info(f"Received message: {message_body} from {from_number}")
+    # Print the incoming message
+    print(f"Received message: {message_body} from {from_number}")
 
     # Create a Twilio MessagingResponse object
     response = MessagingResponse()
