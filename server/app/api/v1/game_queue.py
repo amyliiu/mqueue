@@ -30,9 +30,6 @@ game_players = []
 # List of players currently in the queue
 queue_players = []
 
-# Combined list of all players (first four are game players)
-all_players = game_players + queue_players
-
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
@@ -85,7 +82,7 @@ async def remove_player():
                 player = queue_players[0]
                 await send_sms(
                     player["phoneNumber"],
-                    f"Hi {player['name']}, your court is ready! Please proceed to the courts. Remember to text ''DONE'' to end your game."
+                    f"Hi {player['name']}, your court is ready! Please proceed to the courts. Remember to text 'DONE' to end your game."
                 )
                 game_players.append(queue_players.pop(0))  # Move player from queue to game
             return {"message": "Players moved to current players"}
@@ -103,13 +100,6 @@ async def get_game_players():
 async def get_queue_players():
     """Get all players currently in the queue"""
     return {"queuePlayers": queue_players}
-
-@router.get("/all-players")
-async def get_all_players():
-    """Get all players in both the game and the queue"""
-    # Update all_players to reflect the current state
-    all_players = game_players + queue_players
-    return {"allPlayers": all_players}
 
 @router.post("/add-to-queue")
 async def add_to_queue(player: Player):
@@ -144,15 +134,16 @@ async def handle_sms_webhook(request: Request):
     response = MessagingResponse()
 
     if message_body == "DONE":
-        # Check if the sender is in the current game players
+        # Check if the sender is in the game_players
         if any(player["phoneNumber"] == from_number for player in game_players):
-            # Send thank you message to all players in currentGamePlayers
+            # Send thank you message to all players in game_players
             for player in game_players:
                 await send_sms(player["phoneNumber"], "Thank you for playing! You have been removed from the game.")
-            # Clear the list of current game players
+            # Clear the list of game_players
             game_players.clear()
+            response.message("All players have been removed from the game.")
         else:
-            response.message("You are not currently in a game.")
+            response.message("You are not currently in the game.")
     else:
         response.message("Sorry, I didn't understand that. Please send 'DONE' to proceed.")
 
