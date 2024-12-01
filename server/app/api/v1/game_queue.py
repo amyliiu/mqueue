@@ -33,6 +33,12 @@ class Player(BaseModel):
     name: str
     phoneNumber: str
 
+def format_phone_number(phone_number: str) -> str:
+    """Format phone number to include country code if necessary"""
+    if not phone_number.startswith('+'):
+        return f'+1{phone_number}'  # Adjust the country code as needed
+    return phone_number
+
 def get_twilio_client():
     """Get or create Twilio client"""
     if not all([TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN]):
@@ -53,8 +59,7 @@ async def send_sms(to_number: str, message: str):
             return
 
         # Format phone number
-        if not to_number.startswith('+'):
-            to_number = f'+1{to_number}'
+        to_number = format_phone_number(to_number)
 
         # Send SMS in thread pool
         def send():
@@ -76,6 +81,7 @@ async def remove_player():
         try:
             for _ in range(4):
                 player = queue_players[0]
+                player["phoneNumber"] = format_phone_number(player["phoneNumber"])  # Format phone number
                 await send_sms(
                     player["phoneNumber"],
                     f"Hi {player['name']}, your court is ready! Please proceed to the courts. Remember to text 'DONE' to end your game."
@@ -111,6 +117,7 @@ async def add_to_queue(player: Player):
     """Add a player to the queue"""
     try:
         print(f"Adding player: {player.name} ({player.phoneNumber})")
+        player.phoneNumber = format_phone_number(player.phoneNumber)  # Format phone number
         queue_players.append({"name": player.name, "phoneNumber": player.phoneNumber})
         position = len(queue_players)
 
@@ -131,6 +138,7 @@ async def handle_sms_webhook(request: Request):
     form_data = await request.form()
     message_body = form_data.get("Body", "").strip().upper()
     from_number = form_data.get("From", "")
+    from_number = format_phone_number(from_number)  # Format the incoming number
 
     # Print the incoming message
     print(f"Received message: {message_body} from {from_number}")
