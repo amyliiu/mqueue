@@ -23,8 +23,15 @@ print(f"Phone Number: {TWILIO_PHONE_NUMBER}")
 
 router = APIRouter(prefix="/api/v1")
 app = FastAPI()
-queue = []
-curr_players = []
+
+# List of players currently in the game
+game_players = []
+
+# List of players currently in the queue
+queue_players = []
+
+# Combined list of all players (first four are game players)
+all_players = game_players + queue_players
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -72,36 +79,45 @@ async def send_sms(to_number: str, message: str):
         print(f"Error sending SMS: {str(e)}")
 
 async def remove_player():
-    print(f"curr_players: {curr_players}")
-    print(f"queue: {queue}")
-
-    if len(curr_players) == 0 and len(queue) >= 4:
+    if len(queue_players) >= 4:
         try:
             for _ in range(4):
-                player = queue[0]
+                player = queue_players[0]
                 await send_sms(
                     player["phoneNumber"],
                     f"Hi {player['name']}, your court is ready! Please proceed to the courts. Remember to text ''DONE'' to end your game."
                 )
-                curr_players.append(queue.pop(0))
+                game_players.append(queue_players.pop(0))  # Move player from queue to game
             return {"message": "Players moved to current players"}
         except Exception as e:
             print(f"Error moving players: {str(e)}")
             raise HTTPException(status_code=500, detail=str(e))
     return {"message": "No players to move"}
 
-@router.get("/queue")
-async def get_queue():
-    """Get all players in queue"""
-    return queue
+@router.get("/game")
+async def get_game_players():
+    """Get all players currently in the game"""
+    return {"gamePlayers": game_players}
 
-@router.post("/queue")
+@router.get("/queue")
+async def get_queue_players():
+    """Get all players currently in the queue"""
+    return {"queuePlayers": queue_players}
+
+@router.get("/all-players")
+async def get_all_players():
+    """Get all players in both the game and the queue"""
+    # Update all_players to reflect the current state
+    all_players = game_players + queue_players
+    return {"allPlayers": all_players}
+
+@router.post("/add-to-queue")
 async def add_to_queue(player: Player):
     """Add a player to the queue"""
     try:
         print(f"Adding player: {player.name} ({player.phoneNumber})")
-        queue.append({"name": player.name, "phoneNumber": player.phoneNumber})
-        position = len(queue)
+        queue_players.append({"name": player.name, "phoneNumber": player.phoneNumber})
+        position = len(queue_players)
 
         await send_sms(
             player.phoneNumber,
@@ -113,10 +129,6 @@ async def add_to_queue(player: Player):
     except Exception as e:
         print(f"Error adding player: {str(e)}")
         return {"error": str(e)}
-
-@router.get("/players")
-async def get_curr_players():
-    return curr_players
 
 @router.post("/done")
 async def handle_sms_webhook(request: Request):
@@ -131,18 +143,20 @@ async def handle_sms_webhook(request: Request):
     # Create a Twilio MessagingResponse object
     response = MessagingResponse()
 
-    # Respond based on the message content
     if message_body == "DONE":
-        # Logic to remove the player from the queue
-        if any(player["phoneNumber"] == from_number for player in curr_players):
-            # Call remove_player function
-            await remove_player(from_number)
-            response.message("Thank you! You have been removed from the queue.")
+        # Check if the sender is in the current game players
+        if any(player["phoneNumber"] == from_number for player in game_players):
+            # Send thank you message to all players in currentGamePlayers
+            for player in game_players:
+                await send_sms(player["phoneNumber"], "Thank you for playing! You have been removed from the game.")
+            # Clear the list of current game players
+            game_players.clear()
         else:
-            response.message("You are not in the queue.")
+            response.message("You are not currently in a game.")
     else:
         response.message("Sorry, I didn't understand that. Please send 'DONE' to proceed.")
 
     # Return the TwiML response
     return Response(content=str(response), media_type="text/xml")
+
 app.include_router(router)
