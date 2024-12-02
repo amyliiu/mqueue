@@ -1,10 +1,17 @@
 .container {
-  max-width: 400px;
+  max-width: 800;
   margin: 0 auto;
   padding: 20px;
+  font-family: 'DM Sans', sans-serif; /* Ensure DM Sans font is applied */
+  background-color: #102542; /* Set the background color */
+  color: #ffffff; /* Set default text color to white */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center content horizontally */
+  justify-content: center; /* Center content vertically */
+  height: 100vh; /* Full viewport height */
 }
 
-/* Add new class for the queue status container */
 .queueStatusContainer {
   min-height: 50vh;
   display: flex;
@@ -20,43 +27,65 @@
 
 .title {
   text-align: center;
-  color: var(--primary-color);
-  font-size: 2.5rem;
-  font-weight: bold;
+  font-size: 3.5rem; /* Increase font size */
+  font-weight: bold; /* Make title bold */
   margin-bottom: 2rem;
+}
+
+.title span {
+  color: #f9c74f; /* Yellow color for "line" */
 }
 
 .queueForm {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  align-items: center; /* Center the form items */
 }
 
 .inputField {
+  width: 100%; /* Set fixed width */
+  max-width: 350px; /* Limit maximum width */
   padding: 12px;
   border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 1rem;
-  background-color: var(--highlight-color);
+  color: #14213d;
+  background-color: #f9f9f9; /* Change background color */
+  font-family: 'DM Sans', sans-serif; /* Ensure DM Sans font is applied */
 }
 
 .checkboxContainer {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  align-items: center; /* Center checkbox and text */
+  gap: 20px; /* Increase gap for better separation */
   margin: 1rem 0;
   font-size: 0.9rem;
   text-align: left;
 }
 
+.checkbox {
+  width: 20px; /* Set fixed width for checkbox */
+  height: 20px; /* Set fixed height for checkbox */
+}
+
+.checkboxLabel {
+  width: 300px; /* Set fixed width for label text */
+  text-align: left; /* Align text to the left */
+  font-size: 0.82rem;
+}
+
 .submitButton {
   padding: 12px 24px;
-  background-color: var(--primary-color);
-  color: white;
+  background-color: #f9c74f; /* Change button color */
+  color: #14213d; /* Change text color */
   border: none;
   border-radius: 6px;
   font-size: 1rem;
+  font-weight: bold; /* Make button text bold */
   cursor: pointer;
+  font-family: 'DM Sans', sans-serif; /* Ensure DM Sans font is applied */
+  text-align: center; /* Center text inside the button */
 }
 
 .submitButton:disabled {
@@ -75,14 +104,14 @@
 .queueHeader {
   font-size: 1.5rem;
   font-weight: bold;
-  color: #14213d;
+  color: #ffffff; /* Change to white */
   margin: -1rem 0;
 }
 
 .positionDisplay {
   font-size: 4rem;
   font-weight: bold;
-  color: #14213d;
+  color: #f9c74f; /* Change to yellow */
   margin: 0.5rem 0;
 }
 
@@ -91,15 +120,26 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  width: 100%;
+  max-width: 300px;
+  align-items: center;
 }
 
 .menuItem {
   padding: 1rem;
-  background-color: #e5e5f7;
+  background-color: #e5e5f7; /* Change background color */
   border-radius: 8px;
+  color: #14213d;
+  font-family: 'DM Sans', sans-serif;
 }
 
 .activeMenuItem {
-  background-color: #14213d;
-  color: white;
+  background-color: #f9c74f; /* Change active item color */
+  color: #14213d;
+  width: 100%; 
+  font-family: 'DM Sans', sans-serif;
+  margin: 0 auto; 
+  width: 100%;
+  max-width: 150px; /* Set a maximum width for each item */
+  text-align: center;
 } 
