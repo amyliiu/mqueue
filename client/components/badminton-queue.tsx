@@ -2,7 +2,7 @@
 import { useState, FormEvent, useEffect } from 'react';
 import styles from './badminton-queue.module.css';
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 console.log(API_URL);
 if (!API_URL) {
   console.error('NEXT_PUBLIC_BACKEND_API_URL is not defined');
