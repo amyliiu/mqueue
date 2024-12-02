@@ -125,7 +125,7 @@ async def handle_sms_webhook(request: Request):
     """Handle SMS webhook for responding to messages"""
     form_data = await request.form()
     message_body = form_data.get("Body", "").strip().upper()
-    from_number = form_data.get("From", "")
+    from_number = form_data.get("From", "").strip()
     from_number = from_number[2:]
     # Log the incoming message
     logging.info(f"Received message: {message_body} from {from_number}")
