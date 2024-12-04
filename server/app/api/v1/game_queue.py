@@ -208,7 +208,7 @@ async def add_to_queue(player: Player):
 
         await send_sms(
             player.phoneNumber,
-            f"Hi {player.name}! You are number {position - player.groupSize + 1} in the queue. {player.phoneNumber}."
+            f"Hi {player.name}! You are number {position - player.groupSize + 1} in the queue with a group of {player.groupSize} people."
         )
         if len(game_players) == 0:
             await remove_player()
