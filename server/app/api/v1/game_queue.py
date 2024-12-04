@@ -247,9 +247,9 @@ async def handle_sms_webhook(request: Request):
             if any(player["phoneNumber"] == from_number for player in game_players):
                 # Call remove_player function
                 await remove_player()
-                response.message("Thank you! You have been removed from the queue.")
+                response.message("Thank you for playing! You have been removed from the game.")
             else:
-                response.message("You are not in the queue.")
+                response.message("You are not in a game.")
         else:
             response.message("Sorry, I didn't understand that. Please send 'DONE' to proceed.")
 
